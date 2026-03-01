@@ -5,11 +5,6 @@ workflows:
     environment:
       node: 18
       cocoapods: default
-      # optional: cache npm and pods
-      cache:
-        paths:
-          - ~/.npm
-          - ios/Pods
     scripts:
       - name: Install dependencies
         script: |
