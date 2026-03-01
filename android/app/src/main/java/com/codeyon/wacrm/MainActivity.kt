@@ -1,4 +1,4 @@
-package com.codeyon.wacrm
+package com.whatsapp.serv5
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build
