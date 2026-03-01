@@ -1,18 +1,22 @@
 workflows:
   expo_ios:
-    name: Expo iOS Build
+    name: Build iOS Expo App
     max_build_duration: 60
     environment:
       node: 18
       cocoapods: default
+      # optional: cache npm and pods
+      cache:
+        paths:
+          - ~/.npm
+          - ios/Pods
     scripts:
       - name: Install dependencies
         script: |
-          npm install -g eas-cli
+          npm install -g eas-cli@latest
           npm install
       - name: Build iOS
         script: |
-          eas login --token $EXPO_TOKEN
           eas build -p ios --non-interactive
     artifacts:
       - '**/*.ipa'
