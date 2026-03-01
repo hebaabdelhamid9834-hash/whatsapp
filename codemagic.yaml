@@ -1,17 +1,33 @@
 workflows:
-  expo_ios:
-    name: Build iOS Expo App
-    max_build_duration: 60
+  ios-app-store:
+    name: iOS App Store Release
+    instance_type: mac_mini_m2 # Use Apple Silicon for speed
     environment:
-      node: 18
-      cocoapods: default
+      groups:
+        - app_store_credentials # Create this group in Codemagic UI for your API keys
+      vars:
+        XCODE_SCHEME: "YourSchemeName"
+        APP_ID: 1234567890 # Found in App Store Connect
     scripts:
       - name: Install dependencies
-        script: |
-          npm install -g eas-cli@latest
+        script: | 
           npm install
-      - name: Build iOS
-        script: |
-          eas build -p ios --non-interactive
-    artifacts:
-      - '**/*.ipa'
+          cd ios && pod install
+      - name: Set up code signing
+        script: | 
+          keychain initialize
+          # This command fetches/generates profiles automatically
+          app-store-connect fetch-signing-files "com.your.bundle.id" --type IOS_APP_STORE --create
+          keychain add-certificates
+          xcode-project use-profiles
+      - name: Build ipa for distribution
+        script: | 
+          xcode-project build-ipa \
+            --workspace ios/YourApp.xcworkspace \
+            --scheme $XCODE_SCHEME \
+            --mode release
+    publishing:
+      app_store_connect:
+        auth: integration # Uses the integration from Step 1
+        submit_to_testflight: true 
+        submit_to_app_store: false # Set to true if you want it to go straight to review
