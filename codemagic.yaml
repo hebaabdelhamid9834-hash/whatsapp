@@ -1,33 +1,21 @@
 workflows:
   ios-app-store:
     name: iOS App Store Release
-    instance_type: mac_mini_m2 # Use Apple Silicon for speed
+    # --- ADD THIS SECTION ---
+    integrations:
+      app_store_connect: "Your Integration Name" # The name you gave it in Team Settings
+    # -------------------------
+    instance_type: mac_mini_m2
     environment:
       groups:
-        - app_store_credentials # Create this group in Codemagic UI for your API keys
-      vars:
-        XCODE_SCHEME: "YourSchemeName"
-        APP_ID: 1234567890 # Found in App Store Connect
+        - app_store_credentials
     scripts:
       - name: Install dependencies
         script: | 
           npm install
           cd ios && pod install
-      - name: Set up code signing
-        script: | 
-          keychain initialize
-          # This command fetches/generates profiles automatically
-          app-store-connect fetch-signing-files "com.your.bundle.id" --type IOS_APP_STORE --create
-          keychain add-certificates
-          xcode-project use-profiles
-      - name: Build ipa for distribution
-        script: | 
-          xcode-project build-ipa \
-            --workspace ios/YourApp.xcworkspace \
-            --scheme $XCODE_SCHEME \
-            --mode release
+      # ... (rest of your scripts)
     publishing:
       app_store_connect:
-        auth: integration # Uses the integration from Step 1
-        submit_to_testflight: true 
-        submit_to_app_store: false # Set to true if you want it to go straight to review
+        auth: integration # This now knows which integration to use
+        submit_to_testflight: true
