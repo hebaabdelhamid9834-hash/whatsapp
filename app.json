@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "WaCRM",
+    "name": "WhatsappBot",
     "slug": "wacrm",
     "version": "1.0.5",
     "orientation": "portrait",
@@ -8,20 +8,20 @@
     "userInterfaceStyle": "light",
     "newArchEnabled": false,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
     "ios": {
       "googleServicesFile": "./GoogleService-Info.plist",
       "supportsTablet": true,
-      "bundleIdentifier": "com.codeyon.wacrm"
+      "bundleIdentifier": "com.whatsapp.serv5"
     },
     "android": {
       "hardwareAccelerated": true,
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
@@ -30,7 +30,7 @@
         "android.permission.RECORD_AUDIO",
         "android.permission.MODIFY_AUDIO_SETTINGS"
       ],
-      "package": "com.codeyon.wacrm"
+      "package": "com.whatsapp.serv5"
     },
     "web": {
       "favicon": "./assets/favicon.png"

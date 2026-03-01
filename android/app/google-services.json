@@ -1,21 +1,21 @@
 {
   "project_info": {
-    "project_number": "939531111111",
-    "project_id": "wacrm-990f5",
-    "storage_bucket": "wacrm-990f5.firebasestorage.app"
+    "project_number": "1078137673586",
+    "project_id": "whatsappserv5",
+    "storage_bucket": "whatsappserv5.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:939531111111:android:57161111a895922b9d6dfa",
+        "mobilesdk_app_id": "1:1078137673586:android:af3cbebc3f58926200efeb",
         "android_client_info": {
-          "package_name": "com.codeyon.wacrm"
+          "package_name": "com.whatsapp.serv5"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyAbrbcOHdc_YqIItRukq4LgAC4Fr7LLLI8"
+          "current_key": "AIzaSyCrma7gtF2TZIKZTAob477CTix9M24--xU"
         }
       ],
       "services": {
