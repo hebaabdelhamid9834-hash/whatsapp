@@ -8,8 +8,8 @@ workflows:
         - apple_auth # Matches the group name in Codemagic UI
       vars:
         XCODE_WORKSPACE: "ios/YourProjectName.xcworkspace" # Change this!
-        XCODE_SCHEME: "YourProjectName" # Change this!
-        BUNDLE_ID: "com.yourcompany.app" # Change this!
+        XCODE_SCHEME: "WhatsBots" # Change this!
+        BUNDLE_ID: "com.whatsapp.serv5" # Change this!
       node: latest
       xcode: latest
       cocoapods: default
