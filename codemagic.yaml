@@ -5,11 +5,13 @@ workflows:
     instance_type: mac_mini_m2
     environment:
       groups:
-        - apple_auth # Matches the group name in your Codemagic UI
+        - apple_auth 
       vars:
         XCODE_WORKSPACE: "ios/WaCRM.xcworkspace" 
         XCODE_SCHEME: "WaCRM" 
         BUNDLE_ID: "com.whatsapp.serv5"
+        # الاسم اللي في الصورة اللي إنت بعتها بالظبط
+        PROFIL_NAME: "wtatsappbot ios_app_store 1772373937"
       xcode: latest
       cocoapods: default
     scripts:
@@ -20,27 +22,25 @@ workflows:
       - name: iOS Code Signing
         script: |
           keychain initialize
-          # Fetch and/or create the profile for your Bundle ID
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
             --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" \
             --key-id "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
             --certificate-key "$APP_STORE_CONNECT_PRIVATE_KEY" \
-            --project-type IOS \
-            --create
+            --project-type IOS
           keychain add-certificates
           xcode-project use-profiles
       - name: Build iOS project
         script: |
-          # 1. Force Manual Signing mode
+          # 1. تحويل المشروع لوضع Manual Signing
           PROJECT_FILE="ios/WaCRM.xcodeproj/project.pbxproj"
           sed -i '' 's/ProvisioningStyle = Automatic;/ProvisioningStyle = Manual;/g' "$PROJECT_FILE"
           
-          # 2. Export variables for the build session
+          # 2. ربط البروفايل اللي في الصورة بالمشروع غصب عن Xcode
           export CODE_SIGN_STYLE=Manual
           export CODE_SIGN_IDENTITY="Apple Distribution"
-          export PROVISIONING_PROFILE_SPECIFIER="$CM_PROVISIONING_PROFILE_ID"
+          export PROVISIONING_PROFILE_SPECIFIER="$PROFIL_NAME"
           
-          # 3. Build the IPA
+          # 3. بناء الـ IPA
           xcode-project build-ipa \
             --workspace "$XCODE_WORKSPACE" \
             --scheme "$XCODE_SCHEME"
