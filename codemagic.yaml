@@ -5,29 +5,17 @@ workflows:
     instance_type: mac_mini_m2
     environment:
       groups:
-        - apple_auth 
+        - apple_auth # This must match the group name you created in the UI
       vars:
-        XCODE_WORKSPACE: "ios/expo-wacrm.xcworkspace" # Adjusted based on your folder name
+        XCODE_WORKSPACE: "ios/expo-wacrm.xcworkspace" # Based on your folder: expo-wacrm
         XCODE_SCHEME: "expo-wacrm" 
-        BUNDLE_ID: "com.yourcompany.app" 
+        BUNDLE_ID: "com.your.bundle.id" # Update this to your real Bundle ID
       node: latest
-      xcode: latest
-      cocoapods: default
-
-    triggering:
-      events:
-        - push
-      branch_patterns:
-        - pattern: 'main'
-          include: true
-
     scripts:
       - name: Install dependencies
-        script: |
-          npm install
+        script: npm install
       - name: Install CocoaPods
-        script: |
-          cd ios && pod install
+        script: cd ios && pod install
       - name: iOS Code Signing
         script: |
           keychain initialize
@@ -36,6 +24,7 @@ workflows:
           xcode-project use-profiles
       - name: Build iOS project
         script: |
+          # Automatically increments build number
           LATEST_BUILD_NUMBER=$(app-store-connect get-latest-app-store-build-number "$APP_ID")
           UPDATED_BUILD_NUMBER=$((LATEST_BUILD_NUMBER + 1))
           
@@ -43,12 +32,12 @@ workflows:
             --workspace "$XCODE_WORKSPACE" \
             --scheme "$XCODE_SCHEME" \
             --build-number "$UPDATED_BUILD_NUMBER"
-
     artifacts:
       - build/ios/ipa/*.ipa
-
     publishing:
-      # Option A: If you have linked App Store Connect in Codemagic UI (Integrations)
       app_store_connect:
-        auth: integration 
+        # Use explicit variables to avoid the "integration" validation error
+        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
+        key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
+        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
         submit_to_testflight: true
