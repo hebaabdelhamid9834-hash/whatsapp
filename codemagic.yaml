@@ -7,10 +7,9 @@ workflows:
       groups:
         - apple_auth 
       vars:
-        # Check your ios folder: if the file is whatsapp.xcworkspace, use that.
-        XCODE_WORKSPACE: "ios/whatsapp.xcworkspace" 
-        XCODE_SCHEME: "whatsapp"
-        BUNDLE_ID: "com.your.bundle.id" 
+        XCODE_WORKSPACE: "ios/WaCRM.xcworkspace" # Corrected based on your files
+        XCODE_SCHEME: "WaCRM" 
+        BUNDLE_ID: "com.your.bundle.id" # Replace with your actual bundle ID
       node: latest
     scripts:
       - name: Install dependencies
@@ -20,7 +19,6 @@ workflows:
       - name: iOS Code Signing
         script: |
           keychain initialize
-          # This command requires APP_STORE_CONNECT_KEY_IDENTIFIER to be in the apple_auth group
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
             --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" \
             --key-id "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
@@ -30,10 +28,13 @@ workflows:
           xcode-project use-profiles
       - name: Build iOS project
         script: |
-          # Use xcode-project build-ipa with explicit pathing
+          LATEST_BUILD_NUMBER=$(app-store-connect get-latest-app-store-build-number "$APP_ID")
+          UPDATED_BUILD_NUMBER=$((LATEST_BUILD_NUMBER + 1))
+          
           xcode-project build-ipa \
             --workspace "$XCODE_WORKSPACE" \
-            --scheme "$XCODE_SCHEME"
+            --scheme "$XCODE_SCHEME" \
+            --build-number "$UPDATED_BUILD_NUMBER"
     artifacts:
       - build/ios/ipa/*.ipa
     publishing:
