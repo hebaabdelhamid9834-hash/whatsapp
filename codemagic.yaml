@@ -11,7 +11,6 @@ workflows:
         XCODE_SCHEME: "WaCRM" 
         BUNDLE_ID: "com.whatsapp.serv5"
       xcode: latest
-      cocoapods: default
     scripts:
       - name: Install dependencies
         script: npm install
@@ -20,7 +19,7 @@ workflows:
       - name: iOS Code Signing
         script: |
           keychain initialize
-          # جلب الملفات مع التحقق من الباقة
+          # الأمر ده بيستخدم الـ p8 (اللي معاك) عشان ينزل الشهادة (.p12) والبروفايل أوتوماتيك
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
             --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" \
             --key-id "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
@@ -28,26 +27,22 @@ workflows:
             --project-type IOS \
             --create
           
-          # سطر سحري: لو ملقاش بروفايل، يوقف البلد هنا بدل ما يضيع وقت في خطوة الـ Build
-          ls ~/Library/MobileDevice/Provisioning\ Profiles || echo "No profiles found!"
-          
           keychain add-certificates
+          
+          # دي الخطوة اللي كانت ناقصة: بنجبر النظام يعرفنا هو نزل إيه
           xcode-project use-profiles
       - name: Build iOS project
         script: |
-          # 1. استخراج الـ UUID والاسم بشكل أكثر دقة
-          PROV_PROFILE_PATH=$(ls ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision | head -n 1)
-          PROV_PROFILE_UUID=$(grep -aA1 "UUID" "$PROV_PROFILE_PATH" | grep -o "[-A-Z0-9]\{36\}")
+          # 1. استخراج الـ UUID والـ Team ID من الملفات اللي نزلت
+          PROV_PROFILE_UUID=$(ls ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision | head -n 1 | xargs basename | cut -d'.' -f1)
           
           echo "Using Profile UUID: $PROV_PROFILE_UUID"
 
-          # 2. تعديل ملف المشروع لفرض الـ UUID ده في كل مكان
+          # 2. تعديل ملف المشروع برمجياً
           PROJECT_FILE="ios/WaCRM.xcodeproj/project.pbxproj"
           sed -i '' 's/ProvisioningStyle = Automatic;/ProvisioningStyle = Manual;/g' "$PROJECT_FILE"
-          sed -i '' "s/PROVISIONING_PROFILE = \".*\";/PROVISIONING_PROFILE = \"$PROV_PROFILE_UUID\";/g" "$PROJECT_FILE"
-          sed -i '' "s/PROVISIONING_PROFILE_SPECIFIER = \".*\";/PROVISIONING_PROFILE_SPECIFIER = \"$PROV_PROFILE_UUID\";/g" "$PROJECT_FILE"
           
-          # 3. بناء الـ IPA باستخدام xcodebuild مباشرة لضمان أقصى توافق
+          # 3. بناء الـ IPA مع تمرير كل المتغيرات لـ xcodebuild
           xcodebuild archive \
             -workspace "$XCODE_WORKSPACE" \
             -scheme "$XCODE_SCHEME" \
@@ -56,9 +51,9 @@ workflows:
             CODE_SIGN_STYLE=Manual \
             CODE_SIGN_IDENTITY="Apple Distribution" \
             PROVISIONING_PROFILE_SPECIFIER="$PROV_PROFILE_UUID" \
-            DEVELOPMENT_TEAM="C2Y84Q9T6Y" # التيم ID بتاعك من الصورة
+            DEVELOPMENT_TEAM="C2Y84Q9T6Y"
 
-          # 4. تصدير ملف الـ IPA
+          # 4. تصدير ملف الـ IPA النهائي
           xcode-project build-ipa \
             --workspace "$XCODE_WORKSPACE" \
             --scheme "$XCODE_SCHEME"
