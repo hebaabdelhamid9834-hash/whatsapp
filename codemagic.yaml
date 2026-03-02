@@ -5,7 +5,7 @@ workflows:
     instance_type: mac_mini_m2
     environment:
       groups:
-        - apple_auth 
+        - apple_auth # Matches the group name in your Codemagic UI
       vars:
         XCODE_WORKSPACE: "ios/WaCRM.xcworkspace" 
         XCODE_SCHEME: "WaCRM" 
@@ -20,26 +20,27 @@ workflows:
       - name: iOS Code Signing
         script: |
           keychain initialize
+          # Fetch and/or create the profile for your Bundle ID
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
             --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" \
             --key-id "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
             --certificate-key "$APP_STORE_CONNECT_PRIVATE_KEY" \
-            --project-type IOS
+            --project-type IOS \
+            --create
           keychain add-certificates
           xcode-project use-profiles
       - name: Build iOS project
         script: |
-          # 1. Force Manual Signing in the project file via sed
+          # 1. Force Manual Signing mode
           PROJECT_FILE="ios/WaCRM.xcodeproj/project.pbxproj"
           sed -i '' 's/ProvisioningStyle = Automatic;/ProvisioningStyle = Manual;/g' "$PROJECT_FILE"
           
-          # 2. Export variables directly to the shell
-          # This bypasses the CLI and talks directly to the xcodebuild engine
+          # 2. Export variables for the build session
           export CODE_SIGN_STYLE=Manual
           export CODE_SIGN_IDENTITY="Apple Distribution"
           export PROVISIONING_PROFILE_SPECIFIER="$CM_PROVISIONING_PROFILE_ID"
           
-          # 3. Run the simplest build command (no extra flags)
+          # 3. Build the IPA
           xcode-project build-ipa \
             --workspace "$XCODE_WORKSPACE" \
             --scheme "$XCODE_SCHEME"
