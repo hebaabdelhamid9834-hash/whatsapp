@@ -1,21 +1,56 @@
 workflows:
-  ios-app-store:
+  ios-release:
     name: iOS App Store Release
-    # --- ADD THIS SECTION ---
-    integrations:
-      app_store_connect: "Your Integration Name" # The name you gave it in Team Settings
-    # -------------------------
+    max_build_duration: 120
     instance_type: mac_mini_m2
     environment:
       groups:
-        - app_store_credentials
+        - apple_auth # Matches the group name in Codemagic UI
+      vars:
+        XCODE_WORKSPACE: "ios/YourProjectName.xcworkspace" # Change this!
+        XCODE_SCHEME: "YourProjectName" # Change this!
+        BUNDLE_ID: "com.yourcompany.app" # Change this!
+      node: latest
+      xcode: latest
+      cocoapods: default
+
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: 'main'
+          include: true
+
     scripts:
       - name: Install dependencies
-        script: | 
+        script: |
           npm install
+      - name: Install CocoaPods
+        script: |
           cd ios && pod install
-      # ... (rest of your scripts)
+      - name: iOS Code Signing
+        script: |
+          # This fetches your distribution certificates and provisioning profiles automatically
+          keychain initialize
+          app-store-connect fetch-signing-files "$BUNDLE_ID" --project-type IOS --certificate-key "$APP_STORE_CONNECT_PRIVATE_KEY"
+          keychain add-certificates
+          xcode-project use-profiles
+      - name: Build iOS project
+        script: |
+          # Increment build number based on App Store Connect
+          LATEST_BUILD_NUMBER=$(app-store-connect get-latest-app-store-build-number "$APP_ID")
+          UPDATED_BUILD_NUMBER=$((LATEST_BUILD_NUMBER + 1))
+          
+          xcode-project build-ipa \
+            --workspace "$XCODE_WORKSPACE" \
+            --scheme "$XCODE_SCHEME" \
+            --build-number "$UPDATED_BUILD_NUMBER"
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+
     publishing:
       app_store_connect:
-        auth: integration # This now knows which integration to use
+        auth: integration # Uses the App Store Connect API key from environment
         submit_to_testflight: true
+        # submit_to_app_store: true # Uncomment to submit for review automatically
