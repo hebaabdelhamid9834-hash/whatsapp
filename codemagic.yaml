@@ -9,8 +9,7 @@ workflows:
       vars:
         XCODE_WORKSPACE: "ios/WaCRM.xcworkspace" 
         XCODE_SCHEME: "WaCRM" 
-        # IMPORTANT: Replace the value below with your actual Bundle ID from Apple
-        BUNDLE_ID: "com.whatsapp.serv5" 
+        BUNDLE_ID: "com.whatsapp.serv5" # Verified from your last log
       node: latest
     scripts:
       - name: Install dependencies
@@ -29,14 +28,15 @@ workflows:
           xcode-project use-profiles
       - name: Build iOS project
         script: |
-          # Force the project to Manual signing mode via sed
-          sed -i '' 's/ProvisioningStyle = Automatic;/ProvisioningStyle = Manual;/g' ios/WaCRM.xcodeproj/project.pbxproj
+          # 1. Force Manual Signing and inject the Bundle ID into the project file
+          PROJECT_FILE="ios/WaCRM.xcodeproj/project.pbxproj"
+          sed -i '' 's/ProvisioningStyle = Automatic;/ProvisioningStyle = Manual;/g' "$PROJECT_FILE"
+          sed -i '' "s/PRODUCT_BUNDLE_IDENTIFIER = [^;]*;/PRODUCT_BUNDLE_IDENTIFIER = $BUNDLE_ID;/g" "$PROJECT_FILE"
           
-          # Build using the bundle-id flag so the CLI can find the profile we fetched
+          # 2. Run build with standard flags only
           xcode-project build-ipa \
             --workspace "$XCODE_WORKSPACE" \
-            --scheme "$XCODE_SCHEME" \
-            --bundle-id "$BUNDLE_ID"
+            --scheme "$XCODE_SCHEME"
     artifacts:
       - build/ios/ipa/*.ipa
     publishing:
