@@ -9,7 +9,7 @@ workflows:
       vars:
         XCODE_WORKSPACE: "ios/WaCRM.xcworkspace" 
         XCODE_SCHEME: "WaCRM" 
-        BUNDLE_ID: "com.your.bundle.id" # Replace with your real Bundle ID
+        BUNDLE_ID: "com.whatsapp.serv5" # Replace with your real Bundle ID
       node: latest
     scripts:
       - name: Install dependencies
