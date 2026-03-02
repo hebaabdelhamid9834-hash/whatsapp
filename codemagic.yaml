@@ -10,7 +10,6 @@ workflows:
         XCODE_WORKSPACE: "ios/WaCRM.xcworkspace" 
         XCODE_SCHEME: "WaCRM" 
         BUNDLE_ID: "com.whatsapp.serv5"
-      # This is the correct place for environment-level build settings
       xcode: latest
       cocoapods: default
     scripts:
@@ -30,15 +29,20 @@ workflows:
           xcode-project use-profiles
       - name: Build iOS project
         script: |
-          # Force Manual Signing in the project file
+          # 1. Force Manual Signing in the project file via sed
           PROJECT_FILE="ios/WaCRM.xcodeproj/project.pbxproj"
           sed -i '' 's/ProvisioningStyle = Automatic;/ProvisioningStyle = Manual;/g' "$PROJECT_FILE"
           
-          # Build using standard xcodebuild flags passed directly to the command
+          # 2. Export variables directly to the shell
+          # This bypasses the CLI and talks directly to the xcodebuild engine
+          export CODE_SIGN_STYLE=Manual
+          export CODE_SIGN_IDENTITY="Apple Distribution"
+          export PROVISIONING_PROFILE_SPECIFIER="$CM_PROVISIONING_PROFILE_ID"
+          
+          # 3. Run the simplest build command (no extra flags)
           xcode-project build-ipa \
             --workspace "$XCODE_WORKSPACE" \
-            --scheme "$XCODE_SCHEME" \
-            --env-vars "CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY=\"Apple Distribution\" PROVISIONING_PROFILE_SPECIFIER=$CM_PROVISIONING_PROFILE_ID"
+            --scheme "$XCODE_SCHEME"
     artifacts:
       - build/ios/ipa/*.ipa
     publishing:
