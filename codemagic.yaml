@@ -5,11 +5,12 @@ workflows:
     instance_type: mac_mini_m2
     environment:
       groups:
-        - apple_auth # This must match the group name you created in the UI
+        - apple_auth 
       vars:
-        XCODE_WORKSPACE: "ios/expo-wacrm.xcworkspace" # Based on your folder: expo-wacrm
-        XCODE_SCHEME: "expo-wacrm" 
-        BUNDLE_ID: "com.your.bundle.id" # Update this to your real Bundle ID
+        # Check your ios folder: if the file is whatsapp.xcworkspace, use that.
+        XCODE_WORKSPACE: "ios/whatsapp.xcworkspace" 
+        XCODE_SCHEME: "whatsapp"
+        BUNDLE_ID: "com.your.bundle.id" 
       node: latest
     scripts:
       - name: Install dependencies
@@ -19,24 +20,24 @@ workflows:
       - name: iOS Code Signing
         script: |
           keychain initialize
-          app-store-connect fetch-signing-files "$BUNDLE_ID" --project-type IOS --certificate-key "$APP_STORE_CONNECT_PRIVATE_KEY"
+          # This command requires APP_STORE_CONNECT_KEY_IDENTIFIER to be in the apple_auth group
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" \
+            --key-id "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
+            --certificate-key "$APP_STORE_CONNECT_PRIVATE_KEY" \
+            --project-type IOS
           keychain add-certificates
           xcode-project use-profiles
       - name: Build iOS project
         script: |
-          # Automatically increments build number
-          LATEST_BUILD_NUMBER=$(app-store-connect get-latest-app-store-build-number "$APP_ID")
-          UPDATED_BUILD_NUMBER=$((LATEST_BUILD_NUMBER + 1))
-          
+          # Use xcode-project build-ipa with explicit pathing
           xcode-project build-ipa \
             --workspace "$XCODE_WORKSPACE" \
-            --scheme "$XCODE_SCHEME" \
-            --build-number "$UPDATED_BUILD_NUMBER"
+            --scheme "$XCODE_SCHEME"
     artifacts:
       - build/ios/ipa/*.ipa
     publishing:
       app_store_connect:
-        # Use explicit variables to avoid the "integration" validation error
         api_key: $APP_STORE_CONNECT_PRIVATE_KEY
         key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
         issuer_id: $APP_STORE_CONNECT_ISSUER_ID
