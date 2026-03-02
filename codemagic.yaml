@@ -5,11 +5,11 @@ workflows:
     instance_type: mac_mini_m2
     environment:
       groups:
-        - apple_auth # Matches the group name in Codemagic UI
+        - apple_auth 
       vars:
-        XCODE_WORKSPACE: "ios/YourProjectName.xcworkspace" # Change this!
-        XCODE_SCHEME: "WhatsBots" # Change this!
-        BUNDLE_ID: "com.whatsapp.serv5" # Change this!
+        XCODE_WORKSPACE: "ios/expo-wacrm.xcworkspace" # Adjusted based on your folder name
+        XCODE_SCHEME: "expo-wacrm" 
+        BUNDLE_ID: "com.yourcompany.app" 
       node: latest
       xcode: latest
       cocoapods: default
@@ -30,14 +30,12 @@ workflows:
           cd ios && pod install
       - name: iOS Code Signing
         script: |
-          # This fetches your distribution certificates and provisioning profiles automatically
           keychain initialize
           app-store-connect fetch-signing-files "$BUNDLE_ID" --project-type IOS --certificate-key "$APP_STORE_CONNECT_PRIVATE_KEY"
           keychain add-certificates
           xcode-project use-profiles
       - name: Build iOS project
         script: |
-          # Increment build number based on App Store Connect
           LATEST_BUILD_NUMBER=$(app-store-connect get-latest-app-store-build-number "$APP_ID")
           UPDATED_BUILD_NUMBER=$((LATEST_BUILD_NUMBER + 1))
           
@@ -50,7 +48,7 @@ workflows:
       - build/ios/ipa/*.ipa
 
     publishing:
+      # Option A: If you have linked App Store Connect in Codemagic UI (Integrations)
       app_store_connect:
-        auth: integration # Uses the App Store Connect API key from environment
+        auth: integration 
         submit_to_testflight: true
-        # submit_to_app_store: true # Uncomment to submit for review automatically
