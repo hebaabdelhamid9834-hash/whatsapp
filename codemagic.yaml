@@ -9,7 +9,7 @@ workflows:
       vars:
         XCODE_WORKSPACE: "ios/WaCRM.xcworkspace" 
         XCODE_SCHEME: "WaCRM" 
-        BUNDLE_ID: "com.your.bundle.id" # Double check this matches your Apple Developer Portal
+        BUNDLE_ID: "com.whatsapp.serv5" # MAKE SURE THIS MATCHES YOUR APPLE PORTAL
       node: latest
     scripts:
       - name: Install dependencies
@@ -28,13 +28,16 @@ workflows:
           xcode-project use-profiles
       - name: Build iOS project
         script: |
-          # Fetch build number and set as environment variable
+          # This command disables "Automatically manage signing" so Codemagic can inject the profile
+          xcode-project disable-automatic-signing "$XCODE_WORKSPACE"
+          
           LATEST_BUILD_NUMBER=$(app-store-connect get-latest-app-store-build-number "$APP_ID")
           export BUILD_NUMBER=$((LATEST_BUILD_NUMBER + 1))
           
           xcode-project build-ipa \
             --workspace "$XCODE_WORKSPACE" \
-            --scheme "$XCODE_SCHEME"
+            --scheme "$XCODE_SCHEME" \
+            --export-type app-store
     artifacts:
       - build/ios/ipa/*.ipa
     publishing:
