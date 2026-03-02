@@ -9,8 +9,10 @@ workflows:
       vars:
         XCODE_WORKSPACE: "ios/WaCRM.xcworkspace" 
         XCODE_SCHEME: "WaCRM" 
-        BUNDLE_ID: "com.whatsapp.serv5" # Verified from your last log
-      node: latest
+        BUNDLE_ID: "com.whatsapp.serv5"
+      # This is the correct place for environment-level build settings
+      xcode: latest
+      cocoapods: default
     scripts:
       - name: Install dependencies
         script: npm install
@@ -28,21 +30,15 @@ workflows:
           xcode-project use-profiles
       - name: Build iOS project
         script: |
-          # 1. Force Manual Signing mode in the project file
+          # Force Manual Signing in the project file
           PROJECT_FILE="ios/WaCRM.xcodeproj/project.pbxproj"
           sed -i '' 's/ProvisioningStyle = Automatic;/ProvisioningStyle = Manual;/g' "$PROJECT_FILE"
           
-          # 2. Build the IPA
-          # We pass the signing identity and profile via environment variables
-          # Codemagic sets CM_PROVISIONING_PROFILE_ID automatically after fetch-signing-files
+          # Build using standard xcodebuild flags passed directly to the command
           xcode-project build-ipa \
             --workspace "$XCODE_WORKSPACE" \
-            --scheme "$XCODE_SCHEME"
-        environment:
-          PROVISIONING_PROFILE_SPECIFIER: $CM_PROVISIONING_PROFILE_ID
-          CODE_SIGN_STYLE: Manual
-          CODE_SIGN_IDENTITY: "Apple Distribution"
-        
+            --scheme "$XCODE_SCHEME" \
+            --env-vars "CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY=\"Apple Distribution\" PROVISIONING_PROFILE_SPECIFIER=$CM_PROVISIONING_PROFILE_ID"
     artifacts:
       - build/ios/ipa/*.ipa
     publishing:
